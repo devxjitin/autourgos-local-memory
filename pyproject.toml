@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "autourgos-local-memory"
-version = "1.0.1"
+version = "1.0.0"
 description = "Disk-backed memory for Autourgos agents — JSON file (LocalShortTermMemory) and SQLite (SQLiteMemory)."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -23,7 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = ["autourgos-memory>=1.0.1"]
+dependencies = []
 
 
 [project.urls]

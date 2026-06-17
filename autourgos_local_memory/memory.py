@@ -14,7 +14,7 @@ from errno import EEXIST
 from typing import Generator, List, Optional
 from uuid import uuid4
 
-from autourgos_memory import BaseMemory, MemoryMessage
+from .base import BaseMemory, MemoryMessage
 
 
 # ── LocalShortTermMemory ───────────────────────────────────────────────────────
