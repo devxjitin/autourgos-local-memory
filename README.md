@@ -14,6 +14,10 @@ pip install autourgos-local-memory
 
 ---
 
+## Quick Start
+
+`my_llm` below is any chat-model instance, e.g. `OpenAIChatModel` from `autourgos-openaichat` (`pip install autourgos-openaichat`, needs `OPENAI_API_KEY` set).
+
 ## Classes
 
 ### LocalShortTermMemory — JSON file
@@ -23,7 +27,9 @@ Persists messages as a JSON array. Safe for multiple threads. Uses atomic write 
 ```python
 from autourgos_local_memory import LocalShortTermMemory
 from autourgos_react_agent import ReactAgent
+from autourgos_openaichat import OpenAIChatModel
 
+my_llm = OpenAIChatModel(model="gpt-4o-mini")
 memory = LocalShortTermMemory(
     file_path="./data/session.json",
     max_messages=50,
@@ -77,6 +83,12 @@ memory = SQLiteMemory(db_path=":memory:")
 | `db_path` | str | `"./data/autourgos_memory.db"` | Path to `.db` file. `":memory:"` for ephemeral. |
 | `max_messages` | int or None | `500` | Rolling cap. `None` = unlimited. |
 | `name` | str | `"sqlite"` | Human-readable identifier. |
+
+---
+
+## Known limitations
+
+`LocalShortTermMemory`'s file lock is timeout-based (a lock file plus a wait deadline), not an OS-level advisory lock. If one process holds the lock longer than `lock_timeout_seconds` (e.g. due to slow disk I/O), a second process can end up believing the lock is stale and write concurrently, risking corruption. For high-concurrency multi-process use, prefer `SQLiteMemory` instead — it uses WAL-mode SQLite, which handles concurrent writers safely without relying on a timeout.
 
 ---
 

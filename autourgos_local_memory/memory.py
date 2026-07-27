@@ -4,6 +4,7 @@ memory.py — Disk-backed memory: JSON file and SQLite.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 import threading
@@ -15,6 +16,8 @@ from typing import Generator, List, Optional
 from uuid import uuid4
 
 from .base import BaseMemory, MemoryMessage
+
+logger = logging.getLogger(__name__)
 
 
 # ── LocalShortTermMemory ───────────────────────────────────────────────────────
@@ -126,7 +129,14 @@ class LocalShortTermMemory(BaseMemory):
                 with open(self.file_path, "r", encoding="utf-8-sig") as fh:
                     raw = fh.read().strip()
                 payload = json.loads(raw) if raw else []
-            except (FileNotFoundError, json.JSONDecodeError):
+            except FileNotFoundError:
+                payload = []
+            except json.JSONDecodeError:
+                logger.warning(
+                    "memory file %s contained invalid JSON; starting from an empty list",
+                    self.file_path,
+                    exc_info=True,
+                )
                 payload = []
             messages = [MemoryMessage.from_dict(item) for item in payload]
             messages.append(msg)
