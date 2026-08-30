@@ -26,7 +26,7 @@ Persists messages as a JSON array. Safe for multiple threads. Uses atomic write 
 
 ```python
 from autourgos_local_memory import LocalShortTermMemory
-from autourgos_react_agent import ReactAgent
+from autourgos_agent import Agent
 from autourgos_openaichat import OpenAIChatModel
 
 my_llm = OpenAIChatModel(model="gpt-4o-mini")
@@ -34,11 +34,11 @@ memory = LocalShortTermMemory(
     file_path="./data/session.json",
     max_messages=50,
 )
-agent = ReactAgent(llm=my_llm, memory=memory)
+agent = Agent(llm=my_llm, memory=memory)
 agent.invoke("Remember: my project deadline is Friday")
 
 # Next session — history is loaded from disk automatically
-agent2 = ReactAgent(llm=my_llm, memory=LocalShortTermMemory(file_path="./data/session.json"))
+agent2 = Agent(llm=my_llm, memory=LocalShortTermMemory(file_path="./data/session.json"))
 agent2.invoke("When is my deadline?")
 # → "Your project deadline is Friday."
 ```
@@ -54,7 +54,7 @@ memory = SQLiteMemory(
     db_path="./data/agent.db",
     max_messages=500,  # None for unlimited
 )
-agent = ReactAgent(llm=my_llm, memory=memory)
+agent = Agent(llm=my_llm, memory=memory)
 ```
 
 Use `":memory:"` for an ephemeral in-process database (useful for tests):
