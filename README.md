@@ -90,6 +90,15 @@ Use `":memory:"` for an ephemeral in-process database:
 memory = SQLiteMemory(db_path=":memory:")
 ```
 
+`SQLiteMemory` supports the context-manager protocol, closing its connection automatically:
+
+```python
+with SQLiteMemory(db_path="./data/agent.db") as memory:
+    agent = Agent(llm=my_llm, memory=memory)
+    agent.invoke("Hello!")
+# connection is closed here automatically
+```
+
 ---
 
 ## Parameters
