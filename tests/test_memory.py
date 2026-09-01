@@ -2,6 +2,8 @@
 import os
 import tempfile
 
+import pytest
+
 from autourgos_local_memory import LocalShortTermMemory, SQLiteMemory
 
 
@@ -32,6 +34,35 @@ def test_local_short_term_memory_clear(tmp_path):
     assert mem.get_messages() == []
 
 
+def test_local_short_term_memory_get_messages_on_corrupted_file(tmp_path):
+    """get_messages()/format_for_llm() (via _load()) used to raise
+    json.JSONDecodeError uncaught on a corrupted file, while add_message()
+    silently recovered by resetting to an empty list -- inconsistent
+    corruption handling for two halves of the same file. Reads must recover
+    the same way writes do."""
+    file_path = os.path.join(tmp_path, "mem.json")
+    mem = LocalShortTermMemory(file_path=file_path, max_messages=10)
+    mem.add_user_message("hello")
+
+    with open(file_path, "w", encoding="utf-8") as fh:
+        fh.write("{not valid json,,,")
+
+    assert mem.get_messages() == []
+    assert mem.format_for_llm() == ""
+
+
+def test_local_short_term_memory_add_message_recovers_from_corrupted_file(tmp_path):
+    file_path = os.path.join(tmp_path, "mem.json")
+    mem = LocalShortTermMemory(file_path=file_path, max_messages=10)
+    mem.add_user_message("hello")
+
+    with open(file_path, "w", encoding="utf-8") as fh:
+        fh.write("{not valid json,,,")
+
+    mem.add_user_message("recovered")
+    assert [m.content for m in mem.get_messages()] == ["recovered"]
+
+
 def test_sqlite_memory_add_get_clear():
     mem = SQLiteMemory(db_path=":memory:", max_messages=None)
     mem.add_user_message("hello")
@@ -41,3 +72,12 @@ def test_sqlite_memory_add_get_clear():
     mem.clear()
     assert mem.get_messages() == []
     mem.close()
+
+
+def test_sqlite_memory_supports_context_manager_and_closes_connection():
+    import sqlite3
+    with SQLiteMemory(db_path=":memory:", max_messages=None) as mem:
+        mem.add_user_message("hello")
+        assert [m.content for m in mem.get_messages()] == ["hello"]
+    with pytest.raises(sqlite3.ProgrammingError):
+        mem.get_messages()

@@ -12,7 +12,7 @@ import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from errno import EEXIST
-from typing import Generator, List, Optional
+from typing import Any, Generator, List, Optional
 from uuid import uuid4
 
 from .base import BaseMemory, MemoryMessage
@@ -117,7 +117,21 @@ class LocalShortTermMemory(BaseMemory):
                 raw = fh.read().strip()
             if not raw:
                 return []
-            payload = json.loads(raw)
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError:
+                # Same recovery as add_message(): a corrupted file is treated
+                # as an empty history rather than propagating a crash to
+                # every read path (get_messages/format_for_llm). Previously
+                # this branch raised while add_message() silently repaired
+                # the same corruption -- inconsistent behavior for the two
+                # halves of the same file.
+                logger.warning(
+                    "memory file %s contained invalid JSON; treating as an empty list",
+                    self.file_path,
+                    exc_info=True,
+                )
+                return []
         if not isinstance(payload, list):
             raise ValueError("Memory file must contain a JSON array")
         return [MemoryMessage.from_dict(item) for item in payload]
@@ -277,6 +291,12 @@ class SQLiteMemory(BaseMemory):
     def close(self) -> None:
         with self._lock:
             self._conn.close()
+
+    def __enter__(self) -> "SQLiteMemory":
+        return self
+
+    def __exit__(self, *exc_info: Any) -> None:
+        self.close()
 
     def __repr__(self) -> str:
         return f"SQLiteMemory(db_path={self.db_path!r}, name={self.name!r})"
