@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.0] - 2026-09-01
+
+- Fixed: `_load()` (used by `get_messages()`/`format_for_llm()`) raised
+  uncaught on a corrupted JSON file, while `add_message()` silently
+  recovered by resetting to an empty list — inconsistent handling of the
+  same corruption depending on which method touched the file first.
+  `_load()` now recovers the same way.
+- Added: `SQLiteMemory` supports the context-manager protocol
+  (`with SQLiteMemory(...) as mem:`), closing its connection automatically.
+
 ## [2.0.1] - 2026-07-27
 
 - Added: module logger, used to warn on corrupted memory-file JSON. Docs: added explicit Quick Start heading, fixed the undefined my_llm placeholder, and documented the timeout-based file lock's known concurrency limitation.
