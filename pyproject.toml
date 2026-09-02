@@ -4,13 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "autourgos-local-memory"
-version = "2.1.0"
+version = "2.1.1"
 description = "Disk-backed memory for Autourgos agents — JSON file (LocalShortTermMemory) and SQLite (SQLiteMemory)."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [
     {name = "Jitin Kumar Sengar", email = "devxjitin@gmail.com"}
+]
+maintainers = [
+    {name = "Sonia"},
+    {name = "Vishwanil Suman"},
 ]
 keywords = ["autourgos", "agent", "memory", "llm"]
 classifiers = [

@@ -14,6 +14,6 @@ try:
     __version__ = _v("autourgos-local-memory")
 except Exception:
     logger.debug("could not resolve installed version for autourgos-local-memory", exc_info=True)
-    __version__ = "2.0.2"
+    __version__ = "2.1.1"
 
 __all__ = ["LocalShortTermMemory", "SQLiteMemory"]
