@@ -9,11 +9,8 @@ from .memory import LocalShortTermMemory, SQLiteMemory
 
 logger = logging.getLogger(__name__)
 
-try:
-    from importlib.metadata import version as _v
-    __version__ = _v("autourgos-local-memory")
-except Exception:
-    logger.debug("could not resolve installed version for autourgos-local-memory", exc_info=True)
-    __version__ = "2.1.2"
+from autourgos_core import package_version
+
+__version__ = package_version("autourgos-local-memory", fallback="2.1.3", logger=logger)
 
 __all__ = ["LocalShortTermMemory", "SQLiteMemory"]
