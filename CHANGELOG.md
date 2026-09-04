@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.2.0] - 2026-09-05
+
+- Added: `SQLiteMemory.add_system_message()` (new — inherited from `autourgos-memory`'s `BaseMemory` default, didn't exist before).
+- Internal: `LocalShortTermMemory`/`SQLiteMemory` now use `autourgos-memory`'s shared `add_message`-based defaults (removed duplicated `add_user_message`/`add_agent_message`/`add_tool_message` one-liners) and `format_conversation_banner()` (removed duplicated banner-building). Requires `autourgos-memory>=1.2.0`. No output change for existing methods.
+
 ## [2.1.4] - 2026-09-05
 
 - Internal: `SQLiteMemory`'s connection setup and rolling-cap eviction migrated to `autourgos_core.open_sqlite()`/`row_cap_evict()`. No functional change (this package already created its db_path's parent dir; eviction still keeps exactly the newest `max_messages` rows, verified by a new regression test). Bumped `autourgos-core>=0.9.0`.

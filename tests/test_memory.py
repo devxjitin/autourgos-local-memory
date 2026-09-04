@@ -74,6 +74,15 @@ def test_sqlite_memory_add_get_clear():
     mem.close()
 
 
+def test_sqlite_memory_add_system_message():
+    mem = SQLiteMemory(db_path=":memory:", max_messages=None)
+    msg = mem.add_system_message("policy note")
+    assert msg.role == "system"
+    assert msg.content == "policy note"
+    assert [m.role for m in mem.get_messages()] == ["system"]
+    mem.close()
+
+
 def test_sqlite_memory_supports_context_manager_and_closes_connection():
     import sqlite3
     with SQLiteMemory(db_path=":memory:", max_messages=None) as mem:

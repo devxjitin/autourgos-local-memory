@@ -16,7 +16,7 @@ from uuid import uuid4
 
 from autourgos_core import open_sqlite, row_cap_evict
 
-from .base import BaseMemory, MemoryMessage
+from .base import BaseMemory, MemoryMessage, format_conversation_banner
 
 logger = logging.getLogger(__name__)
 
@@ -160,18 +160,6 @@ class LocalShortTermMemory(BaseMemory):
             self._atomic_write(self.file_path, [m.to_dict() for m in messages])
         return msg
 
-    def add_user_message(self, content: str) -> MemoryMessage:
-        return self.add_message("user", content)
-
-    def add_agent_message(self, content: str) -> MemoryMessage:
-        return self.add_message("agent", content)
-
-    def add_system_message(self, content: str) -> MemoryMessage:
-        return self.add_message("system", content)
-
-    def add_tool_message(self, tool_name: str, result: str) -> MemoryMessage:
-        return self.add_message("tool", f"[{tool_name} returned]: {result}")
-
     def get_messages(self) -> List[MemoryMessage]:
         return self._load()
 
@@ -180,11 +168,7 @@ class LocalShortTermMemory(BaseMemory):
             self._atomic_write(self.file_path, [])
 
     def format_for_llm(self, query: Optional[str] = None) -> str:
-        messages = self._load()
-        if not messages:
-            return ""
-        lines = "\n".join(f"[{m.timestamp.isoformat()}] {m.role}: {m.content}" for m in messages)
-        return f"\n--- Previous Conversation Context ---\n{lines}\n--------------------------------------\n"
+        return format_conversation_banner(self._load())
 
 
 # ── SQLiteMemory ───────────────────────────────────────────────────────────────
@@ -227,8 +211,8 @@ class SQLiteMemory(BaseMemory):
         )
         self._conn.commit()
 
-    def _add(self, role: str, content: str) -> MemoryMessage:
-        ts = datetime.now(timezone.utc)
+    def add_message(self, role: str, content: str, timestamp: Optional[datetime] = None) -> MemoryMessage:
+        ts = timestamp or datetime.now(timezone.utc)
         msg = MemoryMessage(role=role, content=content, timestamp=ts)
         with self._lock:
             self._conn.execute(
@@ -239,15 +223,6 @@ class SQLiteMemory(BaseMemory):
                 row_cap_evict(self._conn, "messages", "id", self.max_messages)
             self._conn.commit()
         return msg
-
-    def add_user_message(self, content: str) -> MemoryMessage:
-        return self._add("user", content)
-
-    def add_agent_message(self, content: str) -> MemoryMessage:
-        return self._add("agent", content)
-
-    def add_tool_message(self, tool_name: str, result: str) -> MemoryMessage:
-        return self._add("tool", f"[{tool_name} returned]: {result}")
 
     def get_messages(self, limit: Optional[int] = None) -> List[MemoryMessage]:
         with self._lock:
@@ -269,11 +244,7 @@ class SQLiteMemory(BaseMemory):
         return result
 
     def format_for_llm(self, query: Optional[str] = None) -> str:
-        messages = self.get_messages()
-        if not messages:
-            return ""
-        lines = "\n".join(f"[{m.timestamp.isoformat()}] {m.role}: {m.content}" for m in messages)
-        return f"\n--- Previous Conversation Context ---\n{lines}\n--------------------------------------\n"
+        return format_conversation_banner(self.get_messages())
 
     def clear(self) -> None:
         with self._lock:
