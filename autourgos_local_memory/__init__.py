@@ -11,6 +11,6 @@ logger = logging.getLogger(__name__)
 
 from autourgos_core import package_version
 
-__version__ = package_version("autourgos-local-memory", fallback="2.1.3", logger=logger)
+__version__ = package_version("autourgos-local-memory", fallback="2.1.4", logger=logger)
 
 __all__ = ["LocalShortTermMemory", "SQLiteMemory"]

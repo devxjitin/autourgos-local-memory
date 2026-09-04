@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.4] - 2026-09-05
+
+- Internal: `SQLiteMemory`'s connection setup and rolling-cap eviction migrated to `autourgos_core.open_sqlite()`/`row_cap_evict()`. No functional change (this package already created its db_path's parent dir; eviction still keeps exactly the newest `max_messages` rows, verified by a new regression test). Bumped `autourgos-core>=0.9.0`.
+
 ## [2.1.3] - 2026-09-04
 
 - Internal: `__version__` resolution moved to `autourgos_core.package_version()` (new `autourgos-core>=0.3.0` dependency). No functional change.

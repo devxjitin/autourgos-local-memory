@@ -6,7 +6,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import sqlite3
 import threading
 import time
 from contextlib import contextmanager
@@ -14,6 +13,8 @@ from datetime import datetime, timezone
 from errno import EEXIST
 from typing import Any, Generator, List, Optional
 from uuid import uuid4
+
+from autourgos_core import open_sqlite, row_cap_evict
 
 from .base import BaseMemory, MemoryMessage
 
@@ -211,16 +212,11 @@ class SQLiteMemory(BaseMemory):
         max_messages: Optional[int] = 500,
         name: str = "sqlite",
     ) -> None:
-        if db_path != ":memory:":
-            folder = os.path.dirname(os.path.abspath(db_path))
-            if folder:
-                os.makedirs(folder, exist_ok=True)
         self.db_path = db_path
         self.max_messages = max_messages
         self.name = name
         self._lock = threading.RLock()
-        self._conn = sqlite3.connect(db_path, check_same_thread=False)
-        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn = open_sqlite(db_path)
         self._conn.execute(
             """CREATE TABLE IF NOT EXISTS messages (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -240,11 +236,7 @@ class SQLiteMemory(BaseMemory):
                 (role, content, ts.isoformat()),
             )
             if self.max_messages is not None:
-                self._conn.execute(
-                    "DELETE FROM messages WHERE id NOT IN "
-                    "(SELECT id FROM messages ORDER BY id DESC LIMIT ?)",
-                    (self.max_messages,),
-                )
+                row_cap_evict(self._conn, "messages", "id", self.max_messages)
             self._conn.commit()
         return msg
 
